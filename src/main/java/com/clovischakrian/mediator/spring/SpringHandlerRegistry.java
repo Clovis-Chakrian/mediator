@@ -3,37 +3,25 @@ package com.clovischakrian.mediator.spring;
 import com.clovischakrian.mediator.core.IHandlerRegistry;
 import com.clovischakrian.mediator.core.IRequest;
 import com.clovischakrian.mediator.core.IRequestHandler;
-import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class SpringHandlerRegistry implements IHandlerRegistry {
-    private final ApplicationContext context;
+@Component
+public class SpringHandlerRegistry {
+    private final Map<Class<?>, IRequestHandler<?, ?>> registry = new ConcurrentHashMap<>();
 
-    public SpringHandlerRegistry(ApplicationContext context) {
-        this.context = context;
+    public void registerHandler(Class<?> requestType, IRequestHandler<?, ?> handler) {
+        registry.put(requestType, handler);
     }
 
-    @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public <TRequest extends IRequest<TResponse>, TResponse> IRequestHandler<TRequest, TResponse> resolve(
-            Class<TRequest> requestType) {
-        Map<String, IRequestHandler> handlers = context.getBeansOfType(IRequestHandler.class);
+    @SuppressWarnings("unchecked")
+    public <TRequest extends IRequest<TResponse>, TResponse> IRequestHandler<TRequest, TResponse> getHandler(Class<TRequest> requestType) {
+        return (IRequestHandler<TRequest, TResponse>) registry.get(requestType);
+    }
 
-        for (IRequestHandler<?, ?> handler : handlers.values()) {
-            Type[] interfaces = handler.getClass().getGenericInterfaces();
-            for (Type type : interfaces) {
-                if (type instanceof ParameterizedType) {
-                    Type[] typeArguments = ((ParameterizedType) type).getActualTypeArguments();
-                    if (typeArguments[0].equals(requestType)) {
-                        return (IRequestHandler<TRequest, TResponse>) handler;
-                    }
-                }
-            }
-        }
-
-        throw new IllegalArgumentException("No handler found for " + requestType.getName());
+    public boolean containsHandler(Class<?> requestType) {
+        return registry.containsKey(requestType);
     }
 }
