@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
-public class SpringHandlerRegistry {
+public class SpringHandlerRegistry implements IHandlerRegistry {
     private final Map<Class<?>, IRequestHandler<?, ?>> registry = new ConcurrentHashMap<>();
 
     public void registerHandler(Class<?> requestType, IRequestHandler<?, ?> handler) {
