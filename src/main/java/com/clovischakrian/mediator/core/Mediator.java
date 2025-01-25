@@ -13,7 +13,7 @@ public class Mediator implements IMediator {
     @SuppressWarnings("unchecked")
     public <TResponse> TResponse send(IRequest<TResponse> request) {
         try {
-            IRequestHandler<IRequest<TResponse>, TResponse> handler = handlerRegistry.getHandler(request.getClass());
+            IRequestHandler<IRequest<TResponse>, TResponse> handler = handlerRegistry.resolveHandler(request.getClass());
             if (handler == null) {
                 throw new RuntimeException("No handler found for request type: " + request.getClass().getSimpleName());
             }

@@ -26,7 +26,7 @@ public class SpringHandlerResolver implements IHandlerResolver {
         Map<String, IRequestHandler> handlers = context.getBeansOfType(IRequestHandler.class);
         for (IRequestHandler<?, ?> handler : handlers.values()) {
             Class<?> requestType = getRequestType(handler);
-            handlerRegistry.registerHandler(requestType, handler);
+//            handlerRegistry.registerHandler(requestType, handler);
         }
     }
 
