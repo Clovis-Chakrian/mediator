@@ -1,23 +1,30 @@
 package com.clovischakrian.mediator.core;
+import com.clovischakrian.mediator.exceptions.FailedToHandleRequestException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import com.clovischakrian.mediator.exceptions.HandlerNotFoundException;
 
 public class Mediator implements IMediator {
     private final IHandlerRegistry handlerRegistry;
+    private final TransactionTemplate transactionTemplate;
 
-    public Mediator(IHandlerRegistry handlerRegistry) {
+    @Autowired
+    public Mediator(IHandlerRegistry handlerRegistry, TransactionTemplate transactionTemplate) {
         this.handlerRegistry = handlerRegistry;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @Override
     public <TResponse> TResponse send(IRequest<TResponse> request) {
-        try {
-            @SuppressWarnings("unchecked")
-            IRequestHandler<IRequest<TResponse>, TResponse> handler =
-                    handlerRegistry.resolve(request.getClass());
-            return handler.handle(request);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to handle request", e);
-        }
+        return transactionTemplate.execute(status -> {
+            try {
+                @SuppressWarnings("unchecked")
+                IRequestHandler<IRequest<TResponse>, TResponse> handler =
+                        handlerRegistry.resolve(request.getClass());
+                return handler.handle(request);
+            } catch (Exception e) {
+                throw new FailedToHandleRequestException("Failed to handle request", e);
+            }
+        });
     }
 }
